@@ -1,0 +1,106 @@
+.skills-section {
+  background: rgba(15, 23, 42, 0.5);
+  padding: 6rem 0;
+}
+
+.skills-main-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.skill-category-box, 
+.tools-category-box {
+  padding: 1.5rem;
+  border-radius: 1.2rem;
+  height: 100%;
+}
+
+.skill-category-box h3,
+.tools-category-box h3 {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  color: var(--primary);
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.8rem;
+}
+
+.skills-mini-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.2rem;
+}
+
+.skill-item-mini {
+  width: 100%;
+}
+
+.skill-header-mini {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.skill-logo-mini {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.skill-info-mini {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.progress-bar-mini {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-bar-mini .progress {
+  height: 100%;
+  background: var(--primary);
+}
+
+.tools-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.8rem;
+}
+
+.tool-badge-mini {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tool-logo-mini {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.tool-badge-mini span {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+@media (max-width: 1100px) {
+  .skills-main-row {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
