@@ -38,7 +38,7 @@ const About = () => {
               </div>
 
               <div className="roadmap-item">
-                <div className="roadmap-dot highlight"></div>
+                <div className="roadmap-dot"></div>
                 <div className="roadmap-content glass-morphism">
                   <span className="roadmap-year">2023 - 2026</span>
                   <h4>Bachelor of Science in Computer Science</h4>
@@ -47,7 +47,7 @@ const About = () => {
               </div>
 
               <div className="roadmap-item">
-                <div className="roadmap-dot"></div>
+                <div className="roadmap-dot highlight"></div>
                 <div className="roadmap-content glass-morphism">
                   <span className="roadmap-year">Current</span>
                   <h4>MERN Stack Specialization</h4>

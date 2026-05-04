@@ -8,6 +8,9 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('projects');
   const [projects, setProjects] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [resume, setResume] = useState(null);
+  const [certificates, setCertificates] = useState([]);
+  const [skills, setSkills] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [profile, setProfile] = useState({
     username: '',
@@ -28,11 +31,30 @@ const AdminDashboard = () => {
     demoLink: '',
     githubLink: ''
   });
+  const [newCertificate, setNewCertificate] = useState({
+    title: '',
+    issuer: '',
+    imageUrl: '',
+    issueDate: '',
+    credentialUrl: '',
+    description: ''
+  });
+  const [newSkill, setNewSkill] = useState({
+    name: '',
+    category: 'frontend',
+    proficiency: 80,
+    icon: '',
+    color: '#6366f1',
+    order: 0
+  });
 
   useEffect(() => {
     fetchProjects();
     fetchMessages();
     fetchProfile();
+    fetchResume();
+    fetchCertificates();
+    fetchSkills();
   }, []);
 
   const fetchProfile = async () => {
@@ -211,6 +233,254 @@ const AdminDashboard = () => {
     fetchMessages();
   };
 
+  const fetchResume = async () => {
+    try {
+      const res = await fetch(getApiUrl('/api/resume'));
+      if (res.ok) {
+        const data = await res.json();
+        setResume(data);
+      }
+    } catch (err) {
+      console.error('Error fetching resume:', err);
+    }
+  };
+
+  const fetchCertificates = async () => {
+    try {
+      const res = await fetch(getApiUrl('/api/certificates'));
+      const data = await res.json();
+      setCertificates(data);
+    } catch (err) {
+      console.error('Error fetching certificates:', err);
+    }
+  };
+
+  const handleResumeUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      setUploading(true);
+      const token = localStorage.getItem('adminToken');
+      const res = await fetch(getApiUrl('/api/upload?type=resume'), {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+
+      if (!res.ok) throw new Error('Upload failed');
+
+      const data = await res.json();
+
+      // Save resume to database
+      const token2 = localStorage.getItem('adminToken');
+      const saveRes = await fetch(getApiUrl('/api/resume'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token2}`
+        },
+        body: JSON.stringify({
+          filename: file.name,
+          url: data.url
+        })
+      });
+
+      if (saveRes.ok) {
+        alert('Resume uploaded successfully!');
+        fetchResume();
+      }
+      setUploading(false);
+    } catch (err) {
+      console.error(err);
+      alert('Error uploading resume');
+      setUploading(false);
+    }
+  };
+
+  const handleAddCertificate = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('adminToken');
+
+    try {
+      const url = editingId ? getApiUrl(`/api/certificates/${editingId}`) : getApiUrl('/api/certificates');
+      const method = editingId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          ...newCertificate,
+          issueDate: new Date(newCertificate.issueDate).toISOString()
+        })
+      });
+
+      if (res.ok) {
+        setShowAddForm(false);
+        setEditingId(null);
+        setNewCertificate({
+          title: '',
+          issuer: '',
+          imageUrl: '',
+          issueDate: '',
+          credentialUrl: '',
+          description: ''
+        });
+        fetchCertificates();
+        alert(editingId ? 'Certificate updated!' : 'Certificate added!');
+      } else {
+        const error = await res.json();
+        alert('Error: ' + (error.message || 'Unknown error'));
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error adding certificate');
+    }
+  };
+
+  const handleCertificateImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      setUploading(true);
+      const token = localStorage.getItem('adminToken');
+      const res = await fetch(getApiUrl('/api/upload?type=certificate'), {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+
+      if (!res.ok) throw new Error('Upload failed');
+
+      const data = await res.json();
+      setNewCertificate({ ...newCertificate, imageUrl: data.url });
+      alert('Certificate image uploaded!');
+      setUploading(false);
+    } catch (err) {
+      console.error(err);
+      alert('Error uploading certificate image');
+      setUploading(false);
+    }
+  };
+
+  const deleteCertificate = async (id) => {
+    if (!window.confirm('Delete this certificate?')) return;
+    const token = localStorage.getItem('adminToken');
+    try {
+      await fetch(getApiUrl(`/api/certificates/${id}`), {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      fetchCertificates();
+      alert('Certificate deleted!');
+    } catch (err) {
+      console.error(err);
+      alert('Error deleting certificate');
+    }
+  };
+
+  const handleEditCertificate = (cert) => {
+    setNewCertificate({
+      title: cert.title,
+      issuer: cert.issuer,
+      imageUrl: cert.imageUrl,
+      issueDate: cert.issueDate.split('T')[0],
+      credentialUrl: cert.credentialUrl || '',
+      description: cert.description || ''
+    });
+    setEditingId(cert._id);
+    setShowAddForm(true);
+  };
+
+  const fetchSkills = async () => {
+    try {
+      const res = await fetch(getApiUrl('/api/skills'));
+      const data = await res.json();
+      setSkills(data);
+    } catch (err) {
+      console.error('Error fetching skills:', err);
+    }
+  };
+
+  const handleAddSkill = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('adminToken');
+
+    try {
+      const url = editingId ? getApiUrl(`/api/skills/${editingId}`) : getApiUrl('/api/skills');
+      const method = editingId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(newSkill)
+      });
+
+      if (res.ok) {
+        setShowAddForm(false);
+        setEditingId(null);
+        setNewSkill({
+          name: '',
+          category: 'frontend',
+          proficiency: 80,
+          icon: '',
+          color: '#6366f1',
+          order: 0
+        });
+        fetchSkills();
+        alert(editingId ? 'Skill updated!' : 'Skill added!');
+      } else {
+        const error = await res.json();
+        alert('Error: ' + (error.message || 'Unknown error'));
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error adding skill');
+    }
+  };
+
+  const deleteSkill = async (id) => {
+    if (!window.confirm('Delete this skill?')) return;
+    const token = localStorage.getItem('adminToken');
+    try {
+      await fetch(getApiUrl(`/api/skills/${id}`), {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      fetchSkills();
+      alert('Skill deleted!');
+    } catch (err) {
+      console.error(err);
+      alert('Error deleting skill');
+    }
+  };
+
+  const handleEditSkill = (skill) => {
+    setNewSkill({
+      name: skill.name,
+      category: skill.category,
+      proficiency: skill.proficiency,
+      icon: skill.icon || '',
+      color: skill.color || '#6366f1',
+      order: skill.order || 0
+    });
+    setEditingId(skill._id);
+    setShowAddForm(true);
+  };
+
   return (
     <div className="admin-dashboard container">
       <div className="admin-header">
@@ -220,6 +490,9 @@ const AdminDashboard = () => {
 
       <div className="admin-tabs">
         <button className={activeTab === 'projects' ? 'active' : ''} onClick={() => setActiveTab('projects')}>Projects</button>
+        <button className={activeTab === 'certificates' ? 'active' : ''} onClick={() => setActiveTab('certificates')}>Certificates</button>
+        <button className={activeTab === 'skills' ? 'active' : ''} onClick={() => setActiveTab('skills')}>Skills</button>
+        <button className={activeTab === 'resume' ? 'active' : ''} onClick={() => setActiveTab('resume')}>Resume</button>
         <button className={activeTab === 'messages' ? 'active' : ''} onClick={() => setActiveTab('messages')}>
           Messages {messages.filter(m => !m.read).length > 0 && <span className="badge">{messages.filter(m => !m.read).length}</span>}
         </button>
@@ -335,6 +608,224 @@ const AdminDashboard = () => {
                   </div>
                   <div className="item-actions">
                     <button onClick={() => deleteMessage(m._id)} className="delete-btn">Delete</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'skills' && (
+          <div className="skills-admin">
+            <div className="section-header">
+              <h2>Manage Skills</h2>
+              <button className="btn btn-primary" onClick={() => { setShowAddForm(true); setEditingId(null); setNewSkill({ name: '', category: 'frontend', proficiency: 80, icon: '', color: '#6366f1', order: 0 }); }}>Add New Skill</button>
+            </div>
+
+            {showAddForm && (
+              <form className="add-project-form glass-morphism" onSubmit={handleAddSkill}>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Skill Name</label>
+                    <input type="text" placeholder="e.g., React, Node.js" value={newSkill.name} onChange={e => setNewSkill({...newSkill, name: e.target.value})} required />
+                  </div>
+                  <div className="form-group">
+                    <label>Category</label>
+                    <select value={newSkill.category} onChange={e => setNewSkill({...newSkill, category: e.target.value})}>
+                      <option value="frontend">Frontend</option>
+                      <option value="backend">Backend</option>
+                      <option value="database">Database</option>
+                      <option value="tools">Tools</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Proficiency (1-100)</label>
+                    <input type="number" min="1" max="100" value={newSkill.proficiency} onChange={e => setNewSkill({...newSkill, proficiency: parseInt(e.target.value)})} required />
+                  </div>
+                  <div className="form-group">
+                    <label>Order</label>
+                    <input type="number" min="0" value={newSkill.order} onChange={e => setNewSkill({...newSkill, order: parseInt(e.target.value)})} />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Icon (optional)</label>
+                    <input type="text" placeholder="e.g., ⚛️" value={newSkill.icon} onChange={e => setNewSkill({...newSkill, icon: e.target.value})} />
+                  </div>
+                  <div className="form-group">
+                    <label>Color</label>
+                    <input type="color" value={newSkill.color} onChange={e => setNewSkill({...newSkill, color: e.target.value})} />
+                  </div>
+                </div>
+
+                <div className="form-btns">
+                  <button type="submit" className="btn btn-primary">{editingId ? 'Update Skill' : 'Add Skill'}</button>
+                  <button type="button" className="btn btn-outline" onClick={() => { setShowAddForm(false); setEditingId(null); }}>Cancel</button>
+                </div>
+              </form>
+            )}
+
+            <div className="skills-list">
+              {['frontend', 'backend', 'database', 'tools', 'other'].map(category => {
+                const categorySkills = skills.filter(skill => skill.category === category);
+                if (categorySkills.length === 0) return null;
+
+                return (
+                  <div key={category} className="skill-category">
+                    <h3 className="category-title">{category.charAt(0).toUpperCase() + category.slice(1)}</h3>
+                    <div className="skills-grid">
+                      {categorySkills.map(skill => (
+                        <div key={skill._id} className="skill-item glass-morphism">
+                          <div className="skill-header">
+                            <div className="skill-icon" style={{ color: skill.color }}>
+                              {skill.icon || '⚡'}
+                            </div>
+                            <div className="skill-info">
+                              <h4>{skill.name}</h4>
+                              <div className="skill-proficiency">
+                                <div className="proficiency-bar">
+                                  <div 
+                                    className="proficiency-fill" 
+                                    style={{ width: `${skill.proficiency}%`, backgroundColor: skill.color }}
+                                  ></div>
+                                </div>
+                                <span>{skill.proficiency}%</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="skill-actions">
+                            <button onClick={() => handleEditSkill(skill)} className="edit-btn">Edit</button>
+                            <button onClick={() => deleteSkill(skill._id)} className="delete-btn">Delete</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'resume' && (
+          <div className="resume-admin">
+            <div className="section-header">
+              <h2>Manage Resume</h2>
+            </div>
+            
+            {resume ? (
+              <div className="resume-card glass-morphism">
+                <div className="resume-header">
+                  <div className="resume-icon">📄</div>
+                  <div className="resume-info">
+                    <h3>{resume.filename}</h3>
+                    <p className="resume-date">Uploaded: {new Date(resume.uploadedAt).toLocaleDateString()}</p>
+                  </div>
+                </div>
+                <div className="resume-actions">
+                  <a href={getApiUrl(resume.url)} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
+                    ⬇️ Download Resume
+                  </a>
+                  <button className="btn btn-outline" onClick={() => document.getElementById('resumeFileInput').click()}>
+                    🔄 Update Resume
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="resume-empty glass-morphism">
+                <div className="empty-icon">📋</div>
+                <h3>No Resume Uploaded Yet</h3>
+                <p>Upload your first resume to make it available on your portfolio</p>
+              </div>
+            )}
+
+            <div className="resume-upload-section glass-morphism">
+              <div className="upload-header">
+                <h3>📤 Upload New Resume</h3>
+                <p>Accepted format: PDF only</p>
+              </div>
+              <div className="upload-box">
+                <input 
+                  type="file" 
+                  id="resumeFileInput"
+                  onChange={handleResumeUpload} 
+                  accept=".pdf" 
+                  style={{ display: 'none' }}
+                />
+                <label htmlFor="resumeFileInput" className="file-label">
+                  <div className="file-icon">📁</div>
+                  <span>Click to upload or drag and drop</span>
+                  <small>PDF files only (Max 10MB)</small>
+                </label>
+              </div>
+              {uploading && (
+                <div className="uploading-status">
+                  <div className="spinner"></div>
+                  <span>Uploading resume...</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'certificates' && (
+          <div className="certificates-admin">
+            <div className="section-header">
+              <h2>Manage Certificates</h2>
+              <button className="btn btn-primary" onClick={() => { setShowAddForm(true); setEditingId(null); setNewCertificate({ title: '', issuer: '', imageUrl: '', issueDate: '', credentialUrl: '', description: '' }); }}>Add New Certificate</button>
+            </div>
+
+            {showAddForm && (
+              <form className="add-project-form glass-morphism" onSubmit={handleAddCertificate}>
+                <input type="text" placeholder="Certificate Title" value={newCertificate.title} onChange={e => setNewCertificate({...newCertificate, title: e.target.value})} required />
+                <input type="text" placeholder="Issuer/Organization" value={newCertificate.issuer} onChange={e => setNewCertificate({...newCertificate, issuer: e.target.value})} required />
+                <input type="date" value={newCertificate.issueDate} onChange={e => setNewCertificate({...newCertificate, issueDate: e.target.value})} required />
+                <textarea placeholder="Description" value={newCertificate.description} onChange={e => setNewCertificate({...newCertificate, description: e.target.value})} />
+                <input type="text" placeholder="Credential URL (optional)" value={newCertificate.credentialUrl} onChange={e => setNewCertificate({...newCertificate, credentialUrl: e.target.value})} />
+                
+                <div className="form-group">
+                  <label>Certificate Image</label>
+                  {newCertificate.imageUrl && (
+                    <div className="project-form-preview">
+                      <img 
+                        src={newCertificate.imageUrl.startsWith('http') ? newCertificate.imageUrl : getApiUrl(newCertificate.imageUrl)} 
+                        alt="Certificate" 
+                        style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '0.4rem', marginBottom: '10px' }}
+                      />
+                    </div>
+                  )}
+                  <input type="text" placeholder="Image URL" value={newCertificate.imageUrl} onChange={e => setNewCertificate({...newCertificate, imageUrl: e.target.value})} />
+                  <input type="file" onChange={handleCertificateImageUpload} accept="image/*" style={{ marginTop: '10px' }} />
+                  {uploading && <p>Uploading...</p>}
+                </div>
+
+                <div className="form-btns">
+                  <button type="submit" className="btn btn-primary">{editingId ? 'Update Certificate' : 'Add Certificate'}</button>
+                  <button type="button" className="btn btn-outline" onClick={() => { setShowAddForm(false); setEditingId(null); }}>Cancel</button>
+                </div>
+              </form>
+            )}
+
+            <div className="admin-list">
+              {certificates.map(cert => (
+                <div key={cert._id} className="admin-item glass-morphism">
+                  <div className="admin-item-preview">
+                    <img 
+                      src={cert.imageUrl?.startsWith('http') ? cert.imageUrl : getApiUrl(cert.imageUrl)} 
+                      alt={cert.title} 
+                      className="admin-project-thumb"
+                    />
+                    <div>
+                      <h3>{cert.title}</h3>
+                      <p>{cert.issuer} • {new Date(cert.issueDate).getFullYear()}</p>
+                    </div>
+                  </div>
+                  <div className="item-actions">
+                    <button onClick={() => handleEditCertificate(cert)} className="edit-btn">Edit</button>
+                    <button onClick={() => deleteCertificate(cert._id)} className="delete-btn">Delete</button>
                   </div>
                 </div>
               ))}

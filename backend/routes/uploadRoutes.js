@@ -16,14 +16,40 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
-    const filetypes = /jpeg|jpg|png|webp/;
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = filetypes.test(file.mimetype);
+    const type = req.query.type;
+    
+    if (type === 'resume') {
+      // Allow PDF for resume
+      const pdfMimetype = file.mimetype === 'application/pdf';
+      const pdfExtname = path.extname(file.originalname).toLowerCase() === '.pdf';
+      
+      if (pdfExtname && pdfMimetype) {
+        return cb(null, true);
+      } else {
+        cb('Error: PDF only for resume!');
+      }
+    } else if (type === 'certificate') {
+      // Allow images for certificate
+      const filetypes = /jpeg|jpg|png|webp/;
+      const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+      const mimetype = filetypes.test(file.mimetype);
 
-    if (extname && mimetype) {
-      return cb(null, true);
+      if (extname && mimetype) {
+        return cb(null, true);
+      } else {
+        cb('Error: Images only for certificate!');
+      }
     } else {
-      cb('Error: Images only!');
+      // Default: allow images (profile/project)
+      const filetypes = /jpeg|jpg|png|webp/;
+      const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+      const mimetype = filetypes.test(file.mimetype);
+
+      if (extname && mimetype) {
+        return cb(null, true);
+      } else {
+        cb('Error: Images only!');
+      }
     }
   }
 });

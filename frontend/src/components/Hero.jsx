@@ -5,6 +5,7 @@ import './Hero.css';
 
 const Hero = () => {
   const [profile, setProfile] = useState(null);
+  const [resume, setResume] = useState(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -17,7 +18,21 @@ const Hero = () => {
         console.error('Error fetching profile:', err);
       }
     };
+
+    const fetchResume = async () => {
+      try {
+        const res = await fetch(getApiUrl('/api/resume'));
+        if (res.ok) {
+          const data = await res.json();
+          setResume(data);
+        }
+      } catch (err) {
+        console.error('Error fetching resume:', err);
+      }
+    };
+
     fetchProfile();
+    fetchResume();
   }, []);
 
   return (
@@ -37,8 +52,11 @@ const Hero = () => {
         </p>
         <div className="hero-btns">
           <a href="#projects" className="btn btn-primary">Projects</a>
-          {/* <a href="/resume.pdf" download className="btn btn-outline btn-glow">Resume</a> */}
-          <a href="/resume.pdf" className="btn btn-outline btn-glow">Resume</a>
+          {resume ? (
+            <a href={getApiUrl(resume.url)} target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-glow">Resume</a>
+          ) : (
+            <a href="/resume.pdf" className="btn btn-outline btn-glow">Resume</a>
+          )}
         </div>
 
         <div className="hero-socials">

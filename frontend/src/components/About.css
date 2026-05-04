@@ -88,7 +88,17 @@
 
 .roadmap-dot.highlight {
   border-color: var(--primary);
-  box-shadow: 0 0 15px var(--primary);
+  box-shadow: 0 0 20px var(--primary), 0 0 40px var(--primary), 0 0 60px var(--primary);
+  animation: glow-pulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow-pulse {
+  from {
+    box-shadow: 0 0 20px var(--primary), 0 0 40px var(--primary), 0 0 60px var(--primary);
+  }
+  to {
+    box-shadow: 0 0 30px var(--primary), 0 0 60px var(--primary), 0 0 90px var(--primary);
+  }
 }
 
 .roadmap-content {

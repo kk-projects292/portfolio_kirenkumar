@@ -23,6 +23,9 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/projects', require('./routes/projectRoutes'));
 app.use('/api/messages', require('./routes/messageRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
+app.use('/api/resume', require('./routes/resumeRoutes'));
+app.use('/api/certificates', require('./routes/certificateRoutes'));
+app.use('/api/skills', require('./routes/skillRoutes'));
 
 // Basic Route
 app.get('/', (req, res) => {
