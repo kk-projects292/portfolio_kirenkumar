@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
 import { getCroppedImg } from '../utils/cropImage';
+import { getApiUrl } from '../utils/api';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -35,7 +36,7 @@ const AdminDashboard = () => {
   }, []);
 
   const fetchProfile = async () => {
-    const res = await fetch('http://localhost:5000/api/auth/profile');
+    const res = await fetch(getApiUrl('/api/auth/profile'));
     const data = await res.json();
     setProfile({
       username: data.username,
@@ -46,7 +47,7 @@ const AdminDashboard = () => {
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('adminToken');
-    const res = await fetch('http://localhost:5000/api/auth/profile', {
+    const res = await fetch(getApiUrl('/api/auth/profile'), {
       method: 'PUT',
       headers: { 
         'Content-Type': 'application/json',
@@ -87,7 +88,7 @@ const AdminDashboard = () => {
       setImageToCrop(null);
 
       const token = localStorage.getItem('adminToken');
-      const res = await fetch(`http://localhost:5000/api/upload?type=${cropType}`, {
+      const res = await fetch(getApiUrl(`/api/upload?type=${cropType}`), {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
@@ -105,7 +106,7 @@ const AdminDashboard = () => {
         setProfile(updatedProfile);
 
         // Auto-save profile
-        await fetch('http://localhost:5000/api/auth/profile', {
+        await fetch(getApiUrl('/api/auth/profile'), {
           method: 'PUT',
           headers: { 
             'Content-Type': 'application/json',
@@ -128,14 +129,14 @@ const AdminDashboard = () => {
   };
 
   const fetchProjects = async () => {
-    const res = await fetch('http://localhost:5000/api/projects');
+    const res = await fetch(getApiUrl('/api/projects'));
     const data = await res.json();
     setProjects(data);
   };
 
   const fetchMessages = async () => {
     const token = localStorage.getItem('adminToken');
-    const res = await fetch('http://localhost:5000/api/messages', {
+    const res = await fetch(getApiUrl('/api/messages'), {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     const data = await res.json();
@@ -150,7 +151,7 @@ const AdminDashboard = () => {
   const handleAddProject = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('adminToken');
-    const url = editingId ? `http://localhost:5000/api/projects/${editingId}` : 'http://localhost:5000/api/projects';
+    const url = editingId ? getApiUrl(`/api/projects/${editingId}`) : getApiUrl('/api/projects');
     const method = editingId ? 'PUT' : 'POST';
 
     const res = await fetch(url, {
@@ -193,7 +194,7 @@ const AdminDashboard = () => {
   const deleteProject = async (id) => {
     if (!window.confirm('Delete this project?')) return;
     const token = localStorage.getItem('adminToken');
-    await fetch(`http://localhost:5000/api/projects/${id}`, {
+    await fetch(getApiUrl(`/api/projects/${id}`), {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -203,7 +204,7 @@ const AdminDashboard = () => {
   const deleteMessage = async (id) => {
     if (!window.confirm('Delete this message?')) return;
     const token = localStorage.getItem('adminToken');
-    await fetch(`http://localhost:5000/api/messages/${id}`, {
+    await fetch(getApiUrl(`/api/messages/${id}`), {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -239,7 +240,7 @@ const AdminDashboard = () => {
                 {profile.profileImage && (
                   <div className="profile-form-preview">
                     <img 
-                      src={profile.profileImage.startsWith('http') ? profile.profileImage : `http://localhost:5000${profile.profileImage}`} 
+                      src={profile.profileImage.startsWith('http') ? profile.profileImage : getApiUrl(profile.profileImage)} 
                       alt="Profile" 
                       style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', marginBottom: '10px' }}
                     />
@@ -279,7 +280,7 @@ const AdminDashboard = () => {
                   {newProject.imageUrl && (
                     <div className="project-form-preview">
                       <img 
-                        src={newProject.imageUrl.startsWith('http') ? newProject.imageUrl : `http://localhost:5000${newProject.imageUrl}`} 
+                      src={newProject.imageUrl.startsWith('http') ? newProject.imageUrl : getApiUrl(newProject.imageUrl)}
                         alt="Preview" 
                         style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '0.4rem', marginBottom: '10px' }}
                       />
@@ -302,7 +303,7 @@ const AdminDashboard = () => {
                 <div key={p._id} className="admin-item glass-morphism">
                   <div className="admin-item-preview">
                     <img 
-                      src={p.imageUrl?.startsWith('http') ? p.imageUrl : `http://localhost:5000${p.imageUrl}`} 
+                      src={p.imageUrl?.startsWith('http') ? p.imageUrl : getApiUrl(p.imageUrl)} 
                       alt={p.title} 
                       className="admin-project-thumb"
                     />

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getApiUrl } from '../utils/api';
 import './Projects.css';
 
 const Projects = () => {
@@ -8,7 +9,7 @@ const Projects = () => {
     // Fetch projects from API
     const fetchProjects = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/projects');
+        const res = await fetch(getApiUrl('/api/projects'));
         const data = await res.json();
         setProjects(data);
       } catch (error) {
@@ -28,7 +29,7 @@ const Projects = () => {
               <div key={project._id} className="project-card glass-morphism">
                 <div className="project-img">
                   <img 
-                    src={project.imageUrl?.startsWith('http') ? project.imageUrl : `http://localhost:5000${project.imageUrl}`} 
+                    src={project.imageUrl?.startsWith('http') ? project.imageUrl : getApiUrl(project.imageUrl)} 
                     alt={project.title} 
                   />
                 </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { getApiUrl } from '../utils/api';
 import './Hero.css';
 
 const Hero = () => {
@@ -8,7 +9,7 @@ const Hero = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/auth/profile');
+        const res = await fetch(getApiUrl('/api/auth/profile'));
         const data = await res.json();
         console.log('Hero Profile Data:', data);
         setProfile(data);
@@ -52,7 +53,7 @@ const Hero = () => {
         <div className="profile-container">
           {profile?.profileImage ? (
             <img
-              src={profile.profileImage.startsWith('http') ? profile.profileImage : `http://localhost:5000${profile.profileImage}`}
+              src={profile.profileImage.startsWith('http') ? profile.profileImage : getApiUrl(profile.profileImage)}
               alt="Profile"
               className="profile-img"
             />
