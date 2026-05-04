@@ -55,7 +55,7 @@ const Hero = () => {
           {resume ? (
             <a href={getApiUrl(resume.url)} target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-glow">Resume</a>
           ) : (
-            <a href="../backend/uploads/1777880306688-resume sample1.pdf" className="btn btn-outline btn-glow">Resume</a>
+            <a href="1777880306688-resume sample1.pdf" className="btn btn-outline btn-glow">Resume</a>
           )}
         </div>
 
