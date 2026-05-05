@@ -48,6 +48,16 @@
   width: 24px;
   height: 24px;
   object-fit: contain;
+  flex-shrink: 0;
+}
+
+.skill-icon-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--primary);
 }
 
 .skill-info-mini {

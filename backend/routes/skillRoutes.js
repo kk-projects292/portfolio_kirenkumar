@@ -29,7 +29,7 @@ router.get('/:id', async (req, res) => {
 // POST - Create skill (Admin only)
 router.post('/', protect, async (req, res) => {
   try {
-    const { name, category, proficiency, icon, color, order } = req.body;
+    const { name, category, proficiency, icon, logoUrl, color, order } = req.body;
 
     if (!name || !category || !proficiency) {
       return res.status(400).json({ message: 'Name, category, and proficiency are required' });
@@ -40,6 +40,7 @@ router.post('/', protect, async (req, res) => {
       category,
       proficiency,
       icon: icon || '',
+      logoUrl: logoUrl || '',
       color: color || '#6366f1',
       order: order || 0
     });
@@ -54,7 +55,7 @@ router.post('/', protect, async (req, res) => {
 // PUT - Update skill (Admin only)
 router.put('/:id', protect, async (req, res) => {
   try {
-    const { name, category, proficiency, icon, color, order } = req.body;
+    const { name, category, proficiency, icon, logoUrl, color, order } = req.body;
 
     const skill = await Skill.findByIdAndUpdate(
       req.params.id,
@@ -63,6 +64,7 @@ router.put('/:id', protect, async (req, res) => {
         category,
         proficiency,
         icon: icon || '',
+        logoUrl: logoUrl || '',
         color: color || '#6366f1',
         order: order || 0,
         updatedAt: new Date()

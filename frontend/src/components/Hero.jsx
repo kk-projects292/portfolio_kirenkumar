@@ -44,7 +44,7 @@ const Hero = () => {
         transition={{ duration: 0.8 }}
       >
         <h1 className="hero-title">
-          Hi, I'm <span className="highlight">{profile?.username || 'Kiren'}</span>
+          Hi, I'm <span className="highlight">{profile?.username || 'KIRENKUMAR'}</span>
         </h1>
         <h2 className="hero-subtitle">MERN Stack Developer</h2>
         <p className="hero-description">

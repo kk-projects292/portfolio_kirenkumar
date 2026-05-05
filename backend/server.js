@@ -27,6 +27,24 @@ app.use('/api/resume', require('./routes/resumeRoutes'));
 app.use('/api/certificates', require('./routes/certificateRoutes'));
 app.use('/api/skills', require('./routes/skillRoutes'));
 
+const File = require('./models/File');
+
+app.get('/api/files/:id', async (req, res) => {
+  try {
+    const file = await File.findById(req.params.id);
+    if (!file) {
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    res.set('Content-Type', file.contentType);
+    res.set('Content-Length', file.size);
+    res.send(file.data);
+  } catch (err) {
+    console.error('File fetch error:', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // Basic Route
 app.get('/', (req, res) => {
     res.send('API is running...');

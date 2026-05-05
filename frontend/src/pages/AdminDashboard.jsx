@@ -34,6 +34,7 @@ const AdminDashboard = () => {
   const [newCertificate, setNewCertificate] = useState({
     title: '',
     issuer: '',
+    filename: '',
     imageUrl: '',
     issueDate: '',
     credentialUrl: '',
@@ -44,6 +45,7 @@ const AdminDashboard = () => {
     category: 'frontend',
     proficiency: 80,
     icon: '',
+    logoUrl: '',
     color: '#6366f1',
     order: 0
   });
@@ -141,6 +143,14 @@ const AdminDashboard = () => {
         setNewProject(prev => ({ ...prev, imageUrl: data.url }));
         console.log('Project Image Uploaded:', data.url);
         alert('Project image uploaded!');
+      } else if (cropType === 'skill') {
+        setNewSkill(prev => ({ ...prev, logoUrl: data.url }));
+        console.log('Skill Logo Uploaded:', data.url);
+        alert('Skill logo uploaded!');
+      } else if (cropType === 'skill-icon') {
+        setNewSkill(prev => ({ ...prev, icon: data.url }));
+        console.log('Skill Icon Uploaded:', data.url);
+        alert('Skill icon uploaded!');
       }
 
       setUploading(false);
@@ -317,6 +327,7 @@ const AdminDashboard = () => {
         },
         body: JSON.stringify({
           ...newCertificate,
+          filename: newCertificate.filename || newCertificate.imageUrl.split('/').pop() || '',
           issueDate: new Date(newCertificate.issueDate).toISOString()
         })
       });
@@ -327,6 +338,7 @@ const AdminDashboard = () => {
         setNewCertificate({
           title: '',
           issuer: '',
+          filename: '',
           imageUrl: '',
           issueDate: '',
           credentialUrl: '',
@@ -363,7 +375,7 @@ const AdminDashboard = () => {
       if (!res.ok) throw new Error('Upload failed');
 
       const data = await res.json();
-      setNewCertificate({ ...newCertificate, imageUrl: data.url });
+      setNewCertificate({ ...newCertificate, imageUrl: data.url, filename: file.name });
       alert('Certificate image uploaded!');
       setUploading(false);
     } catch (err) {
@@ -393,6 +405,7 @@ const AdminDashboard = () => {
     setNewCertificate({
       title: cert.title,
       issuer: cert.issuer,
+      filename: cert.filename || cert.imageUrl.split('/').pop() || '',
       imageUrl: cert.imageUrl,
       issueDate: cert.issueDate.split('T')[0],
       credentialUrl: cert.credentialUrl || '',
@@ -437,6 +450,7 @@ const AdminDashboard = () => {
           category: 'frontend',
           proficiency: 80,
           icon: '',
+          logoUrl: '',
           color: '#6366f1',
           order: 0
         });
@@ -474,6 +488,7 @@ const AdminDashboard = () => {
       category: skill.category,
       proficiency: skill.proficiency,
       icon: skill.icon || '',
+      logoUrl: skill.logoUrl || '',
       color: skill.color || '#6366f1',
       order: skill.order || 0
     });
@@ -619,7 +634,7 @@ const AdminDashboard = () => {
           <div className="skills-admin">
             <div className="section-header">
               <h2>Manage Skills</h2>
-              <button className="btn btn-primary" onClick={() => { setShowAddForm(true); setEditingId(null); setNewSkill({ name: '', category: 'frontend', proficiency: 80, icon: '', color: '#6366f1', order: 0 }); }}>Add New Skill</button>
+              <button className="btn btn-primary" onClick={() => { setShowAddForm(true); setEditingId(null); setNewSkill({ name: '', category: 'frontend', proficiency: 80, icon: '', logoUrl: '', color: '#6366f1', order: 0 }); }}>Add New Skill</button>
             </div>
 
             {showAddForm && (
@@ -631,12 +646,11 @@ const AdminDashboard = () => {
                   </div>
                   <div className="form-group">
                     <label>Category</label>
-                    <select value={newSkill.category} onChange={e => setNewSkill({...newSkill, category: e.target.value})}>
-                      <option value="frontend">Frontend</option>
-                      <option value="backend">Backend</option>
-                      <option value="database">Database</option>
-                      <option value="tools">Tools</option>
-                      <option value="other">Other</option>
+                    <select id='skill-options' value={newSkill.category} onChange={e => setNewSkill({...newSkill, category: e.target.value})}>
+                      <option value="frontend">Frontend Development</option>
+                      <option value="backend">Backend & Database</option>
+                      <option value="tools">Tools & Technologies</option>
+                      {/* <option value="other">Other Skills</option> */}
                     </select>
                   </div>
                 </div>
@@ -653,7 +667,8 @@ const AdminDashboard = () => {
                 <div className="form-row">
                   <div className="form-group">
                     <label>Icon (optional)</label>
-                    <input type="text" placeholder="e.g., ⚛️" value={newSkill.icon} onChange={e => setNewSkill({...newSkill, icon: e.target.value})} />
+                    <input type="text" placeholder="e.g., ⚛️ or SVG URL" value={newSkill.icon} onChange={e => setNewSkill({...newSkill, icon: e.target.value})} />
+                    <input type="file" onChange={e => handleFileUpload(e, 'skill-icon')} accept=".svg" style={{ marginTop: '10px' }} />
                   </div>
                   <div className="form-group">
                     <label>Color</label>
@@ -681,8 +696,18 @@ const AdminDashboard = () => {
                         <div key={skill._id} className="skill-item glass-morphism">
                           <div className="skill-header">
                             <div className="skill-icon" style={{ color: skill.color }}>
-                              {skill.icon || '⚡'}
-                            </div>
+                            {skill.logoUrl || (skill.icon && (skill.icon.startsWith('http') || skill.icon.startsWith('/'))) ? (
+                              <img
+                                src={skill.logoUrl ? (skill.logoUrl.startsWith('http') ? skill.logoUrl : getApiUrl(skill.logoUrl)) : (skill.icon.startsWith('http') ? skill.icon : getApiUrl(skill.icon))}
+                                alt={skill.name}
+                                style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'cover' }}
+                              />
+                            ) : skill.icon && skill.icon.startsWith('<svg') ? (
+                              <div style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} dangerouslySetInnerHTML={{ __html: skill.icon }} />
+                            ) : (
+                              <span>{skill.icon || '⚡'}</span>
+                            )}
+                          </div>
                             <div className="skill-info">
                               <h4>{skill.name}</h4>
                               <div className="skill-proficiency">
