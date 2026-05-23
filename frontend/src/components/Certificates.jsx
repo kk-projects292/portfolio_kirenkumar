@@ -68,10 +68,13 @@ const Certificates = () => {
                     transition={{ duration: 0.5, ease: "easeInOut" }}
                   >
                     <div className="cert-card glass-morphism">
-                      <div className="cert-image" onClick={() => setSelectedImg(certificates[currentIndex].imageUrl)}>
+                      <div className="cert-image" onClick={() => {
+                        const url = certificates[currentIndex].imageUrl;
+                        setSelectedImg(url.startsWith('http') ? url : getApiUrl(url));
+                      }}>
                         <img src={certificates[currentIndex].imageUrl.startsWith('http') ? certificates[currentIndex].imageUrl : getApiUrl(certificates[currentIndex].imageUrl)} alt={certificates[currentIndex].title} />
                         <div className="zoom-overlay">
-                          <span>View Full Size</span>
+                          <span>🔍 View Full Size</span>
                         </div>
                       </div>
                       <div className="cert-info">

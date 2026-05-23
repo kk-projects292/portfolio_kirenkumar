@@ -4,6 +4,68 @@ import { getCroppedImg } from '../utils/cropImage';
 import { getApiUrl } from '../utils/api';
 import './AdminDashboard.css';
 
+const SkeletonLoader = ({ type }) => {
+  if (type === 'projects' || type === 'certificates') {
+    return (
+      <div className="skeleton-grid">
+        {[1, 2, 3].map((n) => (
+          <div key={n} className="skeleton-card glass-morphism pulse">
+            <div className="skeleton-thumb"></div>
+            <div className="skeleton-details">
+              <div className="skeleton-title-line"></div>
+              <div className="skeleton-text-line"></div>
+            </div>
+            <div className="skeleton-actions"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  if (type === 'skills') {
+    return (
+      <div className="skeleton-skills">
+        {[1, 2].map((cat) => (
+          <div key={cat} className="skeleton-category-admin">
+            <div className="skeleton-category-header pulse"></div>
+            <div className="skeleton-skills-grid">
+              {[1, 2, 3].map((n) => (
+                <div key={n} className="skeleton-skill-card glass-morphism pulse">
+                  <div className="skeleton-skill-top">
+                    <div className="skeleton-skill-icon"></div>
+                    <div className="skeleton-skill-meta"></div>
+                  </div>
+                  <div className="skeleton-skill-progress"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  if (type === 'messages') {
+    return (
+      <div className="skeleton-messages">
+        {[1, 2, 3].map((n) => (
+          <div key={n} className="skeleton-message-card glass-morphism pulse">
+            <div className="skeleton-message-title"></div>
+            <div className="skeleton-message-text"></div>
+            <div className="skeleton-message-body"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return (
+    <div className="skeleton-form-container glass-morphism pulse">
+      <div className="skeleton-form-header"></div>
+      <div className="skeleton-form-group"></div>
+      <div className="skeleton-form-group"></div>
+      <div className="skeleton-form-btn"></div>
+    </div>
+  );
+};
+
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('projects');
   const [projects, setProjects] = useState([]);
@@ -17,6 +79,7 @@ const AdminDashboard = () => {
     profileImage: ''
   });
   const [uploading, setUploading] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
   const [imageToCrop, setImageToCrop] = useState(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -51,12 +114,24 @@ const AdminDashboard = () => {
   });
 
   useEffect(() => {
-    fetchProjects();
-    fetchMessages();
-    fetchProfile();
-    fetchResume();
-    fetchCertificates();
-    fetchSkills();
+    const loadAllData = async () => {
+      setLoadingData(true);
+      try {
+        await Promise.all([
+          fetchProjects().catch(err => console.error("Error fetching projects:", err)),
+          fetchMessages().catch(err => console.error("Error fetching messages:", err)),
+          fetchProfile().catch(err => console.error("Error fetching profile:", err)),
+          fetchResume().catch(err => console.error("Error fetching resume:", err)),
+          fetchCertificates().catch(err => console.error("Error fetching certificates:", err)),
+          fetchSkills().catch(err => console.error("Error fetching skills:", err))
+        ]);
+      } catch (err) {
+        console.error("Error loading dashboard data:", err);
+      } finally {
+        setLoadingData(false);
+      }
+    };
+    loadAllData();
   }, []);
 
   const fetchProfile = async () => {
@@ -500,7 +575,14 @@ const AdminDashboard = () => {
     <div className="admin-dashboard container">
       <div className="admin-header">
         <h1>Admin Dashboard</h1>
-        <button onClick={handleLogout} className="btn btn-outline">Logout</button>
+        <button onClick={handleLogout} className="btn-logout-enhanced">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" className="logout-icon">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span>Logout</span>
+        </button>
       </div>
 
       <div className="admin-tabs">
@@ -515,10 +597,15 @@ const AdminDashboard = () => {
       </div>
 
       <div className="admin-content">
-        {activeTab === 'profile' && (
+        {loadingData ? (
+          <SkeletonLoader type={activeTab} />
+        ) : (
+          <>
+            {activeTab === 'profile' && (
           <div className="profile-admin">
             <h2>Edit Profile</h2>
-            <form className="add-project-form glass-morphism" onSubmit={handleProfileUpdate}>
+            <form className="add-project-form glass-morphism skill-form-enhanced" onSubmit={handleProfileUpdate}>
+              <div className="skill-form-title">👤 Edit Admin Profile</div>
               <div className="form-group">
                 <label>Username</label>
                 <input type="text" value={profile.username} onChange={e => setProfile({...profile, username: e.target.value})} required />
@@ -535,8 +622,20 @@ const AdminDashboard = () => {
                   </div>
                 )}
                 <input type="text" value={profile.profileImage} onChange={e => setProfile({...profile, profileImage: e.target.value})} />
-                <input type="file" onChange={e => handleFileUpload(e, 'profile')} accept="image/*" style={{ marginTop: '10px' }} />
-                {uploading && <p>Uploading...</p>}
+                <div className="upload-box-inline">
+                  <input type="file" id="profileImageUpload" onChange={e => handleFileUpload(e, 'profile')} accept="image/*" style={{ display: 'none' }} />
+                  <label htmlFor="profileImageUpload" className="file-label">
+                    <div className="file-icon">📷</div>
+                    <span>Click to upload profile image</span>
+                    <small>PNG, JPG, WEBP (Max 5MB)</small>
+                  </label>
+                </div>
+                {uploading && (
+                  <div className="uploading-status">
+                    <div className="spinner"></div>
+                    <span>Uploading image...</span>
+                  </div>
+                )}
               </div>
               <div className="form-group">
                 <label>New Password (leave blank to keep current)</label>
@@ -559,7 +658,8 @@ const AdminDashboard = () => {
             </div>
 
             {showAddForm && (
-              <form className="add-project-form glass-morphism" onSubmit={handleAddProject}>
+              <form className="add-project-form glass-morphism skill-form-enhanced" onSubmit={handleAddProject}>
+                <div className="skill-form-title">{editingId ? '✏️ Edit Project' : '🚀 Add New Project'}</div>
                 <input type="text" placeholder="Title" value={newProject.title} onChange={e => setNewProject({...newProject, title: e.target.value})} required />
                 <textarea placeholder="Description" value={newProject.description} onChange={e => setNewProject({...newProject, description: e.target.value})} required />
                 <input type="text" placeholder="Tech Stack (comma separated)" value={newProject.techStack} onChange={e => setNewProject({...newProject, techStack: e.target.value})} />
@@ -575,7 +675,14 @@ const AdminDashboard = () => {
                     </div>
                   )}
                   <input type="text" placeholder="Image URL" value={newProject.imageUrl} onChange={e => setNewProject({...newProject, imageUrl: e.target.value})} />
-                  <input type="file" onChange={e => handleFileUpload(e, 'project')} accept="image/*" style={{ marginTop: '10px' }} />
+                  <div className="upload-box-inline">
+                    <input type="file" id="projectImageUpload" onChange={e => handleFileUpload(e, 'project')} accept="image/*" style={{ display: 'none' }} />
+                    <label htmlFor="projectImageUpload" className="file-label">
+                      <div className="file-icon">🖼️</div>
+                      <span>Click to upload project image</span>
+                      <small>PNG, JPG, WEBP (Max 5MB)</small>
+                    </label>
+                  </div>
                 </div>
                 <input type="text" placeholder="Demo Link" value={newProject.demoLink} onChange={e => setNewProject({...newProject, demoLink: e.target.value})} />
                 <input type="text" placeholder="GitHub Link" value={newProject.githubLink} onChange={e => setNewProject({...newProject, githubLink: e.target.value})} />
@@ -634,11 +741,15 @@ const AdminDashboard = () => {
           <div className="skills-admin">
             <div className="section-header">
               <h2>Manage Skills</h2>
-              <button className="btn btn-primary" onClick={() => { setShowAddForm(true); setEditingId(null); setNewSkill({ name: '', category: 'frontend', proficiency: 80, icon: '', logoUrl: '', color: '#6366f1', order: 0 }); }}>Add New Skill</button>
+              <div className="skills-header-actions">
+                <span className="skills-count">{skills.length} skills total</span>
+                <button className="btn btn-primary" onClick={() => { setShowAddForm(true); setEditingId(null); setNewSkill({ name: '', category: 'frontend', proficiency: 80, icon: '', logoUrl: '', color: '#6366f1', order: 0 }); }}>+ Add New Skill</button>
+              </div>
             </div>
 
             {showAddForm && (
-              <form className="add-project-form glass-morphism" onSubmit={handleAddSkill}>
+              <form className="add-project-form glass-morphism skill-form-enhanced" onSubmit={handleAddSkill}>
+                <div className="skill-form-title">{editingId ? '✏️ Edit Skill' : '🚀 Add New Skill'}</div>
                 <div className="form-row">
                   <div className="form-group">
                     <label>Skill Name</label>
@@ -656,11 +767,11 @@ const AdminDashboard = () => {
                 </div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Proficiency (1-100)</label>
-                    <input type="number" min="1" max="100" value={newSkill.proficiency} onChange={e => setNewSkill({...newSkill, proficiency: parseInt(e.target.value)})} required />
+                    <label>Proficiency ({newSkill.proficiency}%)</label>
+                    <input type="range" min="1" max="100" value={newSkill.proficiency} onChange={e => setNewSkill({...newSkill, proficiency: parseInt(e.target.value)})} className="proficiency-slider" />
                   </div>
                   <div className="form-group">
-                    <label>Order</label>
+                    <label>Display Order</label>
                     <input type="number" min="0" value={newSkill.order} onChange={e => setNewSkill({...newSkill, order: parseInt(e.target.value)})} />
                   </div>
                 </div>
@@ -668,62 +779,77 @@ const AdminDashboard = () => {
                   <div className="form-group">
                     <label>Icon (optional)</label>
                     <input type="text" placeholder="e.g., ⚛️ or SVG URL" value={newSkill.icon} onChange={e => setNewSkill({...newSkill, icon: e.target.value})} />
-                    <input type="file" onChange={e => handleFileUpload(e, 'skill-icon')} accept=".svg" style={{ marginTop: '10px' }} />
+                    <div className="upload-box-inline">
+                      <input type="file" id="skillIconUpload" onChange={e => handleFileUpload(e, 'skill-icon')} accept=".svg" style={{ display: 'none' }} />
+                      <label htmlFor="skillIconUpload" className="file-label">
+                        <div className="file-icon">⚡</div>
+                        <span>Click to upload SVG icon</span>
+                        <small>SVG files only</small>
+                      </label>
+                    </div>
                   </div>
                   <div className="form-group">
-                    <label>Color</label>
-                    <input type="color" value={newSkill.color} onChange={e => setNewSkill({...newSkill, color: e.target.value})} />
+                    <label>Accent Color</label>
+                    <div className="color-picker-row">
+                      <input type="color" value={newSkill.color} onChange={e => setNewSkill({...newSkill, color: e.target.value})} />
+                      <span className="color-hex">{newSkill.color}</span>
+                    </div>
                   </div>
                 </div>
 
                 <div className="form-btns">
-                  <button type="submit" className="btn btn-primary">{editingId ? 'Update Skill' : 'Add Skill'}</button>
+                  <button type="submit" className="btn btn-primary">{editingId ? '💾 Update Skill' : '➕ Add Skill'}</button>
                   <button type="button" className="btn btn-outline" onClick={() => { setShowAddForm(false); setEditingId(null); }}>Cancel</button>
                 </div>
               </form>
             )}
 
-            <div className="skills-list">
-              {['frontend', 'backend', 'database', 'tools', 'other'].map(category => {
+            <div className="skills-list-enhanced">
+              {['frontend', 'backend', 'tools', 'other'].map(category => {
                 const categorySkills = skills.filter(skill => skill.category === category);
                 if (categorySkills.length === 0) return null;
 
+                const catLabels = { frontend: '🎨 Frontend', backend: '⚙️ Backend', tools: '🔧 Tools & Technologies', other: '📦 Other' };
+
                 return (
-                  <div key={category} className="skill-category">
-                    <h3 className="category-title">{category.charAt(0).toUpperCase() + category.slice(1)}</h3>
-                    <div className="skills-grid">
+                  <div key={category} className="skill-category-admin">
+                    <div className="category-header-admin">
+                      <h3>{catLabels[category] || category}</h3>
+                      <span className="category-count">{categorySkills.length}</span>
+                    </div>
+                    <div className="skills-grid-admin">
                       {categorySkills.map(skill => (
-                        <div key={skill._id} className="skill-item glass-morphism">
-                          <div className="skill-header">
-                            <div className="skill-icon" style={{ color: skill.color }}>
-                            {skill.logoUrl || (skill.icon && (skill.icon.startsWith('http') || skill.icon.startsWith('/'))) ? (
-                              <img
-                                src={skill.logoUrl ? (skill.logoUrl.startsWith('http') ? skill.logoUrl : getApiUrl(skill.logoUrl)) : (skill.icon.startsWith('http') ? skill.icon : getApiUrl(skill.icon))}
-                                alt={skill.name}
-                                style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'cover' }}
-                              />
-                            ) : skill.icon && skill.icon.startsWith('<svg') ? (
-                              <div style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} dangerouslySetInnerHTML={{ __html: skill.icon }} />
-                            ) : (
-                              <span>{skill.icon || '⚡'}</span>
-                            )}
-                          </div>
-                            <div className="skill-info">
-                              <h4>{skill.name}</h4>
-                              <div className="skill-proficiency">
-                                <div className="proficiency-bar">
-                                  <div 
-                                    className="proficiency-fill" 
-                                    style={{ width: `${skill.proficiency}%`, backgroundColor: skill.color }}
-                                  ></div>
-                                </div>
-                                <span>{skill.proficiency}%</span>
+                        <div key={skill._id} className="skill-card-admin glass-morphism" style={{ '--skill-accent': skill.color || '#6366f1' }}>
+                          <div className="skill-card-accent"></div>
+                          <div className="skill-card-body">
+                            <div className="skill-card-top">
+                              <div className="skill-card-icon">
+                                {skill.logoUrl || (skill.icon && (skill.icon.startsWith('http') || skill.icon.startsWith('/'))) ? (
+                                  <img
+                                    src={skill.logoUrl ? (skill.logoUrl.startsWith('http') ? skill.logoUrl : getApiUrl(skill.logoUrl)) : (skill.icon.startsWith('http') ? skill.icon : getApiUrl(skill.icon))}
+                                    alt={skill.name}
+                                  />
+                                ) : skill.icon && skill.icon.startsWith('<svg') ? (
+                                  <div className="skill-svg-icon" dangerouslySetInnerHTML={{ __html: skill.icon }} />
+                                ) : (
+                                  <span className="skill-emoji-icon">{skill.icon || '⚡'}</span>
+                                )}
+                              </div>
+                              <div className="skill-card-meta">
+                                <h4>{skill.name}</h4>
+                                <span className="skill-order-badge">#{skill.order || 0}</span>
                               </div>
                             </div>
-                          </div>
-                          <div className="skill-actions">
-                            <button onClick={() => handleEditSkill(skill)} className="edit-btn">Edit</button>
-                            <button onClick={() => deleteSkill(skill._id)} className="delete-btn">Delete</button>
+                            <div className="skill-card-progress">
+                              <div className="skill-progress-track">
+                                <div className="skill-progress-fill" style={{ width: `${skill.proficiency}%`, background: `linear-gradient(90deg, ${skill.color || '#6366f1'}, ${skill.color || '#6366f1'}88)` }}></div>
+                              </div>
+                              <span className="skill-progress-value" style={{ color: skill.color || '#6366f1' }}>{skill.proficiency}%</span>
+                            </div>
+                            <div className="skill-card-actions">
+                              <button onClick={() => handleEditSkill(skill)} className="skill-edit-btn">✏️ Edit</button>
+                              <button onClick={() => deleteSkill(skill._id)} className="skill-delete-btn">🗑️ Delete</button>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -804,7 +930,8 @@ const AdminDashboard = () => {
             </div>
 
             {showAddForm && (
-              <form className="add-project-form glass-morphism" onSubmit={handleAddCertificate}>
+              <form className="add-project-form glass-morphism skill-form-enhanced" onSubmit={handleAddCertificate}>
+                <div className="skill-form-title">{editingId ? '✏️ Edit Certificate' : '🏆 Add New Certificate'}</div>
                 <input type="text" placeholder="Certificate Title" value={newCertificate.title} onChange={e => setNewCertificate({...newCertificate, title: e.target.value})} required />
                 <input type="text" placeholder="Issuer/Organization" value={newCertificate.issuer} onChange={e => setNewCertificate({...newCertificate, issuer: e.target.value})} required />
                 <input type="date" value={newCertificate.issueDate} onChange={e => setNewCertificate({...newCertificate, issueDate: e.target.value})} required />
@@ -823,8 +950,20 @@ const AdminDashboard = () => {
                     </div>
                   )}
                   <input type="text" placeholder="Image URL" value={newCertificate.imageUrl} onChange={e => setNewCertificate({...newCertificate, imageUrl: e.target.value})} />
-                  <input type="file" onChange={handleCertificateImageUpload} accept="image/*" style={{ marginTop: '10px' }} />
-                  {uploading && <p>Uploading...</p>}
+                  <div className="upload-box-inline">
+                    <input type="file" id="certificateImageUpload" onChange={handleCertificateImageUpload} accept="image/*" style={{ display: 'none' }} />
+                    <label htmlFor="certificateImageUpload" className="file-label">
+                      <div className="file-icon">🏆</div>
+                      <span>Click to upload certificate image</span>
+                      <small>PNG, JPG, WEBP (Max 5MB)</small>
+                    </label>
+                  </div>
+                  {uploading && (
+                    <div className="uploading-status">
+                      <div className="spinner"></div>
+                      <span>Uploading image...</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-btns">
@@ -856,6 +995,8 @@ const AdminDashboard = () => {
               ))}
             </div>
           </div>
+            )}
+          </>
         )}
       </div>
 

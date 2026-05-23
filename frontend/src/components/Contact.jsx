@@ -52,7 +52,7 @@ const Contact = () => {
                 <strong>Phone:</strong> +91 7845928388
               </div>
               <div className="detail-item">
-                <strong>Location:</strong> India
+                <strong>Location:</strong> Sivaganga, TamilNadu
               </div>
             </div>
 

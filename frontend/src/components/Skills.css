@@ -5,12 +5,12 @@
 
 .skills-main-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 2rem;
   align-items: start;
 }
 
-.skill-category-box, 
+.skill-category-box,
 .tools-category-box {
   padding: 1.5rem;
   border-radius: 1.2rem;
@@ -80,6 +80,160 @@
   background: var(--primary);
 }
 
+/* ============================================
+   Tools & Technologies — Marquee Section
+   ============================================ */
+
+.tools-marquee-section {
+  margin-top: 3rem;
+}
+
+.tools-marquee-title {
+  font-size: 1.2rem;
+  color: var(--primary);
+  text-align: center;
+  margin-bottom: 2rem;
+  letter-spacing: 0.5px;
+  position: relative;
+}
+
+.tools-marquee-title::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--accent, #a855f7));
+  margin: 0.6rem auto 0;
+  border-radius: 2px;
+}
+
+/* Marquee track — the visible window */
+.marquee-track {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+  padding: 0.5rem 0;
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    #000 8%,
+    #000 92%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    #000 8%,
+    #000 92%,
+    transparent 100%
+  );
+}
+
+.marquee-track + .marquee-track {
+  margin-top: 0.75rem;
+}
+
+/* Marquee content — the scrolling strip */
+.marquee-content {
+  display: flex;
+  gap: 1rem;
+  width: max-content;
+  will-change: transform;
+}
+
+/* Scroll left (default direction) */
+.marquee-content.scroll-left {
+  animation: marquee-scroll-left 35s linear infinite;
+}
+
+/* Scroll right (reverse direction) */
+.marquee-content.scroll-right {
+  animation: marquee-scroll-right 40s linear infinite;
+}
+
+@keyframes marquee-scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-33.333%);
+  }
+}
+
+@keyframes marquee-scroll-right {
+  0% {
+    transform: translateX(-33.333%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* Pause on hover */
+.marquee-track:hover .marquee-content {
+  animation-play-state: paused;
+}
+
+/* Individual tool chip */
+.tool-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 1.1rem;
+  border-radius: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+  cursor: default;
+  position: relative;
+  overflow: hidden;
+}
+
+.tool-chip::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 2rem;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--chip-color, #6366f1) 12%, transparent),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tool-chip:hover {
+  border-color: color-mix(in srgb, var(--chip-color, #6366f1) 50%, transparent);
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 20px color-mix(in srgb, var(--chip-color, #6366f1) 25%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--chip-color, #6366f1) 15%, transparent);
+}
+
+.tool-chip:hover::before {
+  opacity: 1;
+}
+
+.tool-chip .skill-logo-mini {
+  width: 22px;
+  height: 22px;
+  position: relative;
+  z-index: 1;
+}
+
+.tool-chip span {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-main);
+  letter-spacing: 0.3px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Existing tool badge styles (keep for backward compat) */
 .tools-mini-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -108,9 +262,37 @@
   color: var(--text-main);
 }
 
+/* ============================================
+   Responsive
+   ============================================ */
+
 @media (max-width: 1100px) {
   .skills-main-row {
     grid-template-columns: 1fr;
     gap: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .tool-chip {
+    padding: 0.5rem 0.9rem;
+    gap: 0.5rem;
+  }
+
+  .tool-chip span {
+    font-size: 0.75rem;
+  }
+
+  .tool-chip .skill-logo-mini {
+    width: 18px;
+    height: 18px;
+  }
+
+  .marquee-content.scroll-left {
+    animation-duration: 25s;
+  }
+
+  .marquee-content.scroll-right {
+    animation-duration: 30s;
   }
 }

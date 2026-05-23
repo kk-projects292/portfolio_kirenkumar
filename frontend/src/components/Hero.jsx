@@ -76,7 +76,7 @@ const Hero = () => {
               className="profile-img"
             />
           ) : (
-            <div className="profile-placeholder"></div>
+            <div className="profile-placeholder"><span className='loading-profile'>Loading Profile...</span></div>
           )}
           <div className="blob"></div>
         </div>
